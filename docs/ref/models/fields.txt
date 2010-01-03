@@ -658,6 +658,19 @@ Like a :class:`BooleanField`, but allows ``NULL`` as one of the options. Use
 this instead of a :class:`BooleanField` with ``null=True``. The admin represents
 this as a ``<select>`` box with "Unknown", "Yes" and "No" choices.
 
+``OrderField``
+------------------------
+
+.. class:: OrderField([**options])
+
+Like an :class:`IntegerField`, but specifically for storing the order of an object 
+in relation to other objects of the same type. When a model contains an OrderField, 
+it will be used for the default ordering when obtaining lists of objects.
+
+The admin represents this as an ``<input type="text">``. If Javascript is enabled, 
+the inline for this model will hide the OrderField and allow dragging & dropping 
+instead.
+
 ``PositiveIntegerField``
 ------------------------
 
