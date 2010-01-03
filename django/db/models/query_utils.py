@@ -7,15 +7,10 @@ circular import difficulties.
 """
 
 import weakref
-from copy import deepcopy
+from django.utils.copycompat import deepcopy
 
 from django.utils import tree
 from django.utils.datastructures import SortedDict
-
-try:
-    sorted
-except NameError:
-    from django.utils.itercompat import sorted  # For Python 2.3.
 
 
 class CyclicDependency(Exception):
@@ -24,6 +19,13 @@ class CyclicDependency(Exception):
     dependency, i.e. when deleting multiple objects.
     """
     pass
+
+class InvalidQuery(Exception):
+    """
+    The query passed to raw isn't a safe query to use with raw.
+    """
+    pass
+
 
 class CollectedObjects(object):
     """
