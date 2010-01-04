@@ -936,12 +936,13 @@ inlines to a model by specifying them in a ``ModelAdmin.inlines``::
             BookInline,
         ]
 
-Django provides two subclasses of ``InlineModelAdmin`` and they are:
+Django provides three subclasses of ``InlineModelAdmin`` and they are:
 
     * ``TabularInline``
     * ``StackedInline``
+    * ``SelectorInline``
 
-The difference between these two is merely the template used to render them.
+The difference between these three is merely the template used to render them.
 
 ``InlineModelAdmin`` options
 -----------------------------
@@ -1136,8 +1137,8 @@ example app::
 
     admin.site.register(Product, ProductAdmin)
 
-``django.contrib.contenttypes.generic`` provides both a ``GenericTabularInline``
-and ``GenericStackedInline`` and behave just like any other inline. See the
+``django.contrib.contenttypes.generic`` provides ``GenericTabularInline``, ``GenericStackedInline``, and ``GenericSelectorInline``, and they behave just 
+like any other inline. See the
 :ref:`contenttypes documentation <ref-contrib-contenttypes>` for more specific
 information.
 

@@ -1,0 +1,210 @@
+{% load i18n %}
+
+<div class="selector-inline inline-group" id="{{ inline_admin_formset.opts.verbose_name}}-group">
+    <div class="inline-related">
+        {{ inline_admin_formset.formset.management_form }}
+            <h2>{{ inline_admin_formset.opts.verbose_name_plural|capfirst }}</h2>
+            
+            {{ inline_admin_formset.formset.non_form_errors }}
+            
+            <ul class="inline-selector">
+                {% for inline_admin_form in inline_admin_formset %}
+                    <li class="inline-selector-item{% if forloop.last %} empty_form{% endif %}" id="{{ inline_admin_formset.opts.verbose_name}}{% if not forloop.last %}{{ forloop.counter }}{% else %}-empty{% endif %}-selector">
+                        <a href="#" class="inline-select" title="{{ inline_admin_formset.opts.verbose_name}}{{ forloop.counter }}">
+                        {% if inline_admin_form.original or inline_admin_form.show_url %}
+                            {% if inline_admin_form.original %} {{ inline_admin_form.original }}{% endif %}
+                            {% if inline_admin_form.show_url %}<a href="../../../r/{{ inline_admin_form.original_content_type_id }}/{{ inline_admin_form.original.id }}/">{% trans "View on site" %}</a>{% endif %}
+                        {% else %}
+                        {{ inline_admin_formset.opts.verbose_name|title}}: <span class="inline_label">#{{ forloop.counter }}</span>
+                        {% endif %}
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+            
+            <div class="inline-detail">
+            {% for inline_admin_form in inline_admin_formset %}
+                <div class="selector-item-detail{% if forloop.last %} empty_form{% endif %}" id="{{ inline_admin_formset.opts.verbose_name}}{% if not forloop.last %}{{ forloop.counter }}{% else %}-empty{% endif %}">
+                    <h3>
+                        {% if inline_admin_form.original or inline_admin_form.show_url %}
+                            {% if inline_admin_form.original %} {{ inline_admin_form.original }}{% endif %}
+                            {% if inline_admin_form.show_url %}<a href="../../../r/{{ inline_admin_form.original_content_type_id }}/{{ inline_admin_form.original.id }}/">{% trans "View on site" %}</a>{% endif %}
+                        {% else %}
+                            {{ inline_admin_formset.opts.verbose_name|title}}: <span class="inline_label">#{{ forloop.counter }}</span>
+                        {% endif %}
+
+                        {% if inline_admin_formset.formset.can_delete %}
+                            <span class="inline-selector-delete">
+                                {% if inline_admin_form.original %}
+                                    {{ inline_admin_form.deletion_field.field }} {{ inline_admin_form.deletion_field.label_tag }}
+                                {% endif %}
+                            </span>
+                        {% endif %}
+                    </h3>
+
+                    {% if inline_admin_form.form.non_field_errors %}
+                        {{ inline_admin_form.form.non_field_errors }}
+                    {% endif %}
+                    
+                    {% if inline_admin_form.has_auto_field %}{{ inline_admin_form.pk_field.field }}{% endif %}
+                    
+                    {{ inline_admin_form.fk_field.field }}
+                    
+                    {% spaceless %}
+                    {% for fieldset in inline_admin_form %}
+                        {% for line in fieldset %}
+                            {% for field in line %}
+                                {% if field.is_hidden %} {{ field.field }} {% endif %}
+                            {% endfor %}
+                        {% endfor %}
+                    {% endfor %}
+                    {% endspaceless %}
+
+                    {% for fieldset in inline_admin_form %}
+                    <fieldset class="module aligned {{ fieldset.classes }}">
+                      {% if fieldset.name %}<h2>{{ fieldset.name }}</h2>{% endif %}
+                      {% if fieldset.description %}<div class="description">{{ fieldset.description|safe }}</div>{% endif %}
+                      {% for line in fieldset %}
+                          <div class="form-row{% if line.errors %} errors{% endif %} {% for field in line %}{{ field.field.name }} {% endfor %} ">
+                          {{ line.errors }}
+                          {% for field in line %}
+                          <div{% if not line.fields|length_is:"1" %} class="field-box"{% endif %}>
+                              {% if field.is_checkbox %}
+                                  {{ field.field }}{{ field.label_tag }}
+                              {% else %}
+                                  {{ field.label_tag }}{{ field.field }}
+                              {% endif %}
+                              {% if field.field.field.help_text %}<p class="help">{{ field.field.field.help_text|safe }}</p>{% endif %}
+                          </div>
+                          {% endfor %}
+                          </div>
+                      {% endfor %}
+                    </fieldset>
+                    {% endfor %}
+               </div>
+            {% endfor %}
+            </div>
+        <div class="clear"></div>
+        
+        <ul class="tools add_inline" id="{{ inline_admin_formset.opts.verbose_name}}-addinline">
+            <li><a id="{{ inline_admin_formset.opts.verbose_name }}-add" class="add" href="#">Add a {{ inline_admin_formset.opts.verbose_name }}</a></li>
+        </ul>
+        
+    </div>
+</div>
+
+<script type="text/javascript">
+$(function() {
+    /* Selector */
+    function select_inline(inline) {
+        $('.inline-detail .selector-item-detail').hide();
+        $('.inline-selector .inline-selector-item').removeClass('inline-selected');
+
+        $(inline).addClass('inline-selected');
+        
+        var div_to_show = '#' + $(inline).find('a').attr('title');
+        $(div_to_show).show();
+    }
+    
+    $('.inline-detail .selector-item-detail').hide();
+    $('.inline-detail .selector-item-detail:first').show();
+    $('.inline-selector .inline-selector-item:first').addClass('inline-selected');
+    $('.form-row.errors').each(function() {
+        var id = $(this).parents('.selector-item-detail').attr('id').substring({{ inline_admin_formset.opts.verbose_name|length}});
+        $("#{{ inline_admin_formset.opts.verbose_name}}" + id + "-selector").addClass('selector-error');
+    });
+    
+    if ($('.form-row.errors').html()) {
+        select_inline('.selector-error:first');
+    }
+    else {
+        select_inline('.inline-selector-item:first');
+    }
+    
+    $('.inline-selector-item').click(function () {
+        select_inline(this);
+        return false;
+    });
+    
+    /* Add inline */
+    var prefix = "{{ inline_admin_formset.opts.verbose_name }}";
+    var id_prefix = "#" + prefix;
+    var total_forms = $(id_prefix + '-group input[id$="TOTAL_FORMS"]');
+    var initial_forms = $(id_prefix + '-group').find('input[id$="INITIAL_FORMS"]');
+    
+    // since javascript is turned on, unhide the "add new <inline>" link
+    $('.add_inline').show();
+    
+    // hide the extras, but only if there were no form errors
+    if (!$('.errornote').html()) {
+        if (parseInt(initial_forms.val()) > 0) {
+            $(id_prefix + '-group .inline-selector-item:gt(' + (initial_forms.val() - 1) + ')')
+                .not('.empty_form').remove();
+            $(id_prefix + '-group .selector-item-detail:gt(' + (initial_forms.val() - 1) + ')')
+                .not('.empty_form').remove();
+        }
+        else {
+            $(id_prefix + '-group .inline-selector-item').not('.empty_form').remove();
+            $(id_prefix + '-group .selector-item-detail').not('.empty_form').remove();
+        }
+        
+        total_forms.val(parseInt(initial_forms.val()));
+    }
+    
+    $(id_prefix + "-add").click(function() {
+        // selector
+        var new_selector = $('.inline-selector ' + id_prefix + '-empty-selector').clone(true)
+            .insertBefore('.inline-selector ' + id_prefix + '-empty-selector').fadeIn('normal');
+        
+        var selector_template = $(new_selector).html();
+        var new_selector_html = selector_template.replace(/__prefix__/g, total_forms.val().toString());
+        
+        // form
+        var new_form = $('.inline-detail ' + id_prefix + '-empty').clone(true)
+            .insertBefore('.inline-detail ' + id_prefix + '-empty');
+        
+        var form_template = $(new_form).html();
+        var new_form_html = form_template.replace(/__prefix__/g, total_forms.val().toString());
+        
+        
+        total_forms.val(parseInt(total_forms.val()) + 1);
+        
+        // selector
+        $(new_selector).html(new_selector_html);
+        $(new_selector).attr('id', prefix + total_forms.val().toString() + '-selector');
+        $(new_selector).find('a').attr('title', prefix + total_forms.val().toString());
+        $(new_selector).find('.inline_label').html('#' + total_forms.val().toString());
+        $(new_selector).removeClass('empty_form');
+        
+        // form
+        $(new_form).html(new_form_html);
+        $(new_form).attr('id', prefix + total_forms.val().toString());
+        $(new_form).find('.inline_label').html('#' + total_forms.val().toString());
+        $(new_form).removeClass('empty_form');
+        
+        {% if inline_admin_formset.opts.order_field %}
+        // make the new inline re-orderable
+        $('ul.inline-selector').ListReorder({ useDefaultDragHandle: true});
+        $(new_form).find('input[id$="{{ inline_admin_formset.opts.order_field }}"]').val(total_forms.val());
+        {% endif %}
+        
+        return false;
+    });
+    
+    {% if inline_admin_formset.opts.order_field %}
+    /* Reordering Inlines */
+    var list = $('ul.inline-selector').ListReorder({ useDefaultDragHandle: true});
+    
+    list.bind('listorderchanged', function(evt, jq_list, list_order) {
+        counter = 1;
+        $(id_prefix + '-group a.inline-select').each(function (i) {
+            if (counter < list_order.length) {
+                $('.inline-detail #' + $(this).attr('title') + 
+                    ' input[id$="{{ inline_admin_formset.opts.order_field }}"]').val(counter++);
+            }
+        });
+    });
+    
+    {% endif %}
+});
+</script>
