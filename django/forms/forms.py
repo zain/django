@@ -330,9 +330,9 @@ class BaseForm(StrAndUnicode):
         
             # if this is an empty form and only the OrderField is changed, we want to treat 
             # it as untouched
-            if self.empty_permitted and order_fields != []:
+            if self.empty_permitted and order_fields:
                 difference = filter(lambda x: x not in self._changed_data, order_fields)
-                if difference == []:
+                if difference:
                     self._changed_data = []
         
         return self._changed_data
